@@ -134,3 +134,8 @@ md-checkbox.md-checked {
 .twen-mv {
 	margin: 20px 0 20px 0;
 }
+
+.material-icons:hover {
+  opacity: .5;
+  cursor: pointer;
+}
