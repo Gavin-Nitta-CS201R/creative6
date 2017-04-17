@@ -1,6 +1,6 @@
 'use strict';
 
-function wishListDirective($firebaseObject, $mdDialog, firebaseService) {
+function wishListDirective($firebaseObject, $mdDialog, firebaseService, $rootScope) {
   return {
     restrict: 'E',
     link: function ($scope) {
@@ -8,73 +8,59 @@ function wishListDirective($firebaseObject, $mdDialog, firebaseService) {
       $scope.loaded = false;
 
       function setup() {
-        console.log('uid: ', $scope.uid)
-        firebaseService.getUsers(function (data) {
+        $scope.wishList = firebaseService.getLists().$loaded().then(data => {
+          $scope.uid = $rootScope.uid;
           $scope.wishList = data;
           $scope.loaded = true;
-        }, function () {
-          console.log('There was an error');
         });
-
-        $scope.opened = [];
+        $scope.item = {
+          name: '',
+          description: ''
+        };
+        $scope.newItem = {
+          name: '',
+          description: ''
+        };
       }
 
-      // $scope.purchase = function (item) {
-      //   item.purchased = !item.purchased;
-      //   save();
-      // };
+      $scope.purchase = function (personKey, itemKey, purchased) {
+        firebaseService.purchase(personKey, itemKey, !purchased);
+      };
 
-      // $scope.add = function (person, name, desc) {
-      //   if (!desc) {
-      //     desc = '';
-      //   }
-      //   if (!person.items) {
-      //     person.items = [];
-      //   }
-      //   person.items.push({
-      //     name: name,
-      //     description: desc,
-      //     purchased: false
-      //   });
-      //   save();
-      // };
+      $scope.add = function (name, desc) {
+        firebaseService.addItem({
+          name: name,
+          description: desc,
+          purchased: false
+        });
+      };
 
-      // $scope.showConfirm = function (ev, person, item) {
-      //   var confirm = $mdDialog.confirm()
-      //     .title('Are you sure you want to delete?')
-      //     .ariaLabel('Delete')
-      //     .targetEvent(ev)
-      //     .ok('Yes')
-      //     .cancel('Cancel');
-      //   $mdDialog.show(confirm).then(function () {
-      //     removeItem(person, item);
-      //   });
-      // };
+      $scope.showConfirm = function (ev, key) {
+        var confirm = $mdDialog.confirm()
+          .title('Are you sure you want to delete?')
+          .ariaLabel('Delete')
+          .targetEvent(ev)
+          .ok('Yes')
+          .cancel('Cancel');
+        $mdDialog.show(confirm).then(function () {
+          removeItem(key);
+        });
+      };
 
-      // function removeItem(person, item) {
-      //   var itemIndex = person.items.indexOf(item);
-      //   person.items.splice(itemIndex, 1);
-      //   save();
-      // }
+      function removeItem(key) {
+        firebaseService.removeItem(key);
+      }
 
-      // $scope.beforeEdit = function (item) {
-      //   $scope.before = {};
-      //   $scope.before.name = item.name;
-      //   $scope.before.description = item.description;
-      // };
+      $scope.beforeEdit = function (item) {
+        $scope.before = {};
+        $scope.before.name = item.name;
+        $scope.before.description = item.description;
+      };
 
-      // $scope.cancelEdit = function (item) {
-      //   item.name = $scope.before.name;
-      //   item.description = $scope.before.description;
-      // };
-
-      // function save() {
-      //   for (var i = 0; i < $scope.wishList.length; i++) {
-      //     console.log($scope.wishList[i]);
-      //     delete $scope.wishList[i].opened;
-      //   }
-      //   $scope.wishList.$save();
-      // }
+      $scope.cancelEdit = function (item) {
+        item.name = $scope.before.name;
+        item.description = $scope.before.description;
+      };
 
       setup();
     }
@@ -82,4 +68,4 @@ function wishListDirective($firebaseObject, $mdDialog, firebaseService) {
 }
 
 angular.module('creative6')
-  .directive('wishList', ['$firebaseObject', '$mdDialog', 'firebaseService', wishListDirective]);
+  .directive('wishList', ['$firebaseObject', '$mdDialog', 'firebaseService', '$rootScope', wishListDirective]);
